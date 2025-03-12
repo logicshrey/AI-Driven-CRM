@@ -1,0 +1,163 @@
+{% extends 'base.html' %}
+{% load custom_filters %}
+
+{% block content %}
+<div class="container mt-4">
+    <h1>AI Dashboard</h1>
+
+    <!-- Smart Search -->
+    <div class="card mb-4">
+        <div class="card-header">
+            <h5 class="mb-0">Smart Search</h5>
+        </div>
+        <div class="card-body">
+            <form method="get" class="mb-3">
+                <div class="input-group">
+                    <input type="text" name="q" class="form-control" placeholder="Search customers using natural language..." value="{{ query }}">
+                    <button type="submit" class="btn btn-primary">Search</button>
+                </div>
+            </form>
+            {% if search_results %}
+            <div class="table-responsive">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Category</th>
+                            <th>Sentiment</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for record in search_results %}
+                        <tr>
+                            <td>{{ record.first_name }} {{ record.last_name }}</td>
+                            <td><span class="badge bg-info">{{ record.customer_category }}</span></td>
+                            <td>
+                                <span class="badge {% if record.sentiment_score > 0 %}bg-success{% else %}bg-danger{% endif %}">
+                                    {{ record.sentiment_score|floatformat:2 }}
+                                </span>
+                            </td>
+                            <td><a href="{% url 'record' record.id %}" class="btn btn-sm btn-outline-primary">View</a></td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Customer Categories -->
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Customer Categories</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>Category</th>
+                                    <th>Count</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for category, count in categories.items %}
+                                <tr>
+                                    <td>{{ category|title }}</td>
+                                    <td>{{ count }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Sentiment Overview</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>Metric</th>
+                                    <th>Value</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>Average Sentiment</td>
+                                    <td>
+                                        <span class="badge {% if avg_sentiment > 0 %}bg-success{% else %}bg-danger{% endif %}">
+                                            {{ avg_sentiment|floatformat:2 }}
+                                        </span>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>Positive Feedback</td>
+                                    <td>{{ positive_count }}</td>
+                                </tr>
+                                <tr>
+                                    <td>Negative Feedback</td>
+                                    <td>{{ negative_count }}</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Priority Customers -->
+    <div class="card">
+        <div class="card-header">
+            <h5 class="mb-0">Priority Customers</h5>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Category</th>
+                            <th>Priority Score</th>
+                            <th>Sentiment</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for record in priority_customers %}
+                        <tr>
+                            <td>{{ record.first_name }} {{ record.last_name }}</td>
+                            <td><span class="badge bg-info">{{ record.customer_category }}</span></td>
+                            <td>
+                                <div class="progress">
+                                    <div class="progress-bar bg-warning" role="progressbar" 
+                                         style="width: {{ record.priority_score|multiply:10 }}%">
+                                        {{ record.priority_score }}
+                                    </div>
+                                </div>
+                            </td>
+                            <td>
+                                <span class="badge {% if record.sentiment_score > 0 %}bg-success{% else %}bg-danger{% endif %}">
+                                    {{ record.sentiment_score|floatformat:2 }}
+                                </span>
+                            </td>
+                            <td><a href="{% url 'record' record.id %}" class="btn btn-sm btn-outline-primary">View</a></td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

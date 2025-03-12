@@ -1,0 +1,501 @@
+{% extends 'base.html' %}
+{% load custom_filters %}
+
+{% block content %}
+<div class="container mt-4">
+    <h1>Smart Workflows</h1>
+
+    <!-- Success Toast -->
+    <div class="toast-container position-fixed bottom-0 end-0 p-3">
+        <div id="workflowToast" class="toast" role="alert" aria-live="assertive" aria-atomic="true">
+            <div class="toast-header bg-success text-white">
+                <strong class="me-auto">Success</strong>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="toast"></button>
+            </div>
+            <div class="toast-body">
+                Workflow updated successfully!
+            </div>
+        </div>
+    </div>
+
+    <!-- Active Workflows -->
+    <div class="card mb-4 shadow-sm">
+        <div class="card-header bg-primary text-white">
+            <h5 class="mb-0">Active Workflows</h5>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Customer</th>
+                            <th>Type</th>
+                            <th>Priority</th>
+                            <th>Progress</th>
+                            <th>Next Step</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for workflow in active_workflows %}
+                        <tr>
+                            <td>
+                                <div class="d-flex align-items-center">
+                                    <div class="avatar-circle me-2">{{ workflow.record.first_name|first }}{{ workflow.record.last_name|first }}</div>
+                                    <div>{{ workflow.record.first_name }} {{ workflow.record.last_name }}</div>
+                                </div>
+                            </td>
+                            <td>
+                                <span class="badge {% if workflow.type == 'support' %}bg-danger{% elif workflow.type == 'sales' %}bg-success{% else %}bg-info{% endif %} rounded-pill">
+                                    {{ workflow.type|title }}
+                                </span>
+                            </td>
+                            <td>
+                                <span class="badge {% if workflow.priority == 'high' %}bg-danger{% else %}bg-warning{% endif %} rounded-pill">
+                                    {{ workflow.priority|title }}
+                                </span>
+                            </td>
+                            <td style="width: 150px;">
+                                <div class="progress" style="height: 8px;">
+                                    <div class="progress-bar bg-success" role="progressbar" 
+                                         style="width: {{ workflow.progress }}%" 
+                                         aria-valuenow="{{ workflow.progress }}" 
+                                         aria-valuemin="0" 
+                                         aria-valuemax="100">
+                                    </div>
+                                </div>
+                                <small class="text-muted">{{ workflow.progress }}% Complete</small>
+                            </td>
+                            <td>
+                                {% if workflow.next_step %}
+                                <div>
+                                    <strong class="text-primary">{{ workflow.next_step.action }}</strong>
+                                    <br>
+                                    <small class="text-muted">
+                                        <i class="bi bi-calendar-event"></i>
+                                        Due: {{ workflow.next_step.deadline|date:"M d, Y" }}
+                                    </small>
+                                </div>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <button type="button" class="btn btn-sm btn-outline-primary" 
+                                        data-bs-toggle="modal" 
+                                        data-bs-target="#workflowModal{{ workflow.id }}">
+                                    <i class="bi bi-eye me-1"></i> View Details
+                                </button>
+                            </td>
+                        </tr>
+
+                        <!-- Workflow Modal -->
+                        <div class="modal fade" id="workflowModal{{ workflow.id }}" tabindex="-1" aria-labelledby="workflowModalLabel{{ workflow.id }}" aria-hidden="true">
+                            <div class="modal-dialog modal-lg">
+                                <div class="modal-content">
+                                    <div class="modal-header bg-primary text-white">
+                                        <h5 class="modal-title" id="workflowModalLabel{{ workflow.id }}">
+                                            <i class="bi bi-diagram-3 me-2"></i>
+                                            Workflow Details
+                                        </h5>
+                                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                                    </div>
+                                    <div class="modal-body">
+                                        <div class="card mb-3">
+                                            <div class="card-body">
+                                                <div class="row">
+                                                    <div class="col-md-6">
+                                                        <h6 class="card-subtitle mb-2 text-muted">Customer Information</h6>
+                                                        <p class="card-text">
+                                                            <strong>Name:</strong> {{ workflow.record.first_name }} {{ workflow.record.last_name }}<br>
+                                                            <strong>Type:</strong> {{ workflow.type|title }}<br>
+                                                            <strong>Priority:</strong> {{ workflow.priority|title }}
+                                                        </p>
+                                                    </div>
+                                                    <div class="col-md-6">
+                                                        <h6 class="card-subtitle mb-2 text-muted">Workflow Status</h6>
+                                                        <p class="card-text">
+                                                            <strong>Created:</strong> {{ workflow.created_at|date:"M d, Y H:i" }}<br>
+                                                            <strong>Progress:</strong> {{ workflow.progress }}% Complete<br>
+                                                            <strong>Status:</strong> 
+                                                            <span class="badge bg-success">Active</span>
+                                                        </p>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        
+                                        <h6 class="mb-3">
+                                            <i class="bi bi-list-check me-2"></i>
+                                            Workflow Steps
+                                        </h6>
+                                        <div class="list-group mb-3">
+                                            {% for step in workflow.steps %}
+                                            <div class="list-group-item {% if step.completed %}list-group-item-success{% endif %} position-relative">
+                                                <div class="d-flex justify-content-between align-items-center">
+                                                    <div class="d-flex align-items-center">
+                                                        {% if step.completed %}
+                                                        <i class="bi bi-check-circle-fill text-success me-2"></i>
+                                                        {% else %}
+                                                        <i class="bi bi-circle me-2"></i>
+                                                        {% endif %}
+                                                        <div>
+                                                            <strong>{{ step.action }}</strong>
+                                                            <div class="text-muted">
+                                                                <small>
+                                                                    <i class="bi bi-person me-1"></i>
+                                                                    {{ step.assignee|title }}
+                                                                </small>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    <div class="text-end">
+                                                        <div class="badge {% if step.completed %}bg-success{% else %}bg-warning{% endif %} rounded-pill">
+                                                            {{ step.deadline|date:"M d, Y" }}
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            {% endfor %}
+                                        </div>
+
+                                        {% if not workflow.completed %}
+                                        <div class="card">
+                                            <div class="card-body">
+                                                <h6 class="card-title">
+                                                    <i class="bi bi-pencil-square me-2"></i>
+                                                    Update Workflow
+                                                </h6>
+                                                <div class="mb-3">
+                                                    <label class="form-label">Action:</label>
+                                                    <select class="form-select" id="stepStatus{{ workflow.id }}">
+                                                        <option value="">Select action...</option>
+                                                        <option value="complete_step">Complete Current Step</option>
+                                                        <option value="reassign">Reassign Step</option>
+                                                        <option value="add_note">Add Note</option>
+                                                    </select>
+                                                </div>
+                                                <div class="mb-3 d-none" id="noteField{{ workflow.id }}">
+                                                    <label class="form-label">Note:</label>
+                                                    <textarea class="form-control" rows="3" id="workflowNote{{ workflow.id }}"></textarea>
+                                                </div>
+                                                <div class="mb-3 d-none" id="assigneeField{{ workflow.id }}">
+                                                    <label class="form-label">Assignee:</label>
+                                                    <select class="form-select" id="workflowAssignee{{ workflow.id }}">
+                                                        <option value="">Select assignee...</option>
+                                                        <option value="john">John Doe</option>
+                                                        <option value="jane">Jane Smith</option>
+                                                    </select>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        {% endif %}
+                                    </div>
+                                    <div class="modal-footer">
+                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                                            <i class="bi bi-x-circle me-1"></i>
+                                            Close
+                                        </button>
+                                        {% if not workflow.completed %}
+                                        <button type="button" class="btn btn-primary" onclick="updateWorkflow('{{ workflow.id }}')">
+                                            <i class="bi bi-check2-circle me-1"></i>
+                                            Update
+                                        </button>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Create New Workflow -->
+    <div class="card shadow-sm">
+        <div class="card-header bg-success text-white">
+            <h5 class="mb-0">
+                <i class="bi bi-plus-circle me-2"></i>
+                Create New Workflow
+            </h5>
+        </div>
+        <div class="card-body">
+            <form method="post" id="newWorkflowForm" onsubmit="return validateWorkflowForm()">
+                {% csrf_token %}
+                <div class="row">
+                    <div class="col-md-4 mb-3">
+                        <label class="form-label">Customer</label>
+                        <select class="form-select" name="customer_id" id="customer_id" required>
+                            <option value="">Select customer...</option>
+                            {% for customer in customers %}
+                            <option value="{{ customer.id }}">{{ customer.first_name }} {{ customer.last_name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <label class="form-label">Workflow Type</label>
+                        <select class="form-select" name="workflow_type" id="workflow_type" required>
+                            <option value="">Select type...</option>
+                            <option value="support">Support</option>
+                            <option value="sales">Sales</option>
+                            <option value="onboarding">Onboarding</option>
+                        </select>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <label class="form-label">&nbsp;</label>
+                        <button type="submit" class="btn btn-success d-block w-100">
+                            <i class="bi bi-plus-circle me-1"></i>
+                            Create Workflow
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Custom CSS -->
+<style type="text/css">
+.avatar-circle {
+    width: 32px;
+    height: 32px;
+    background-color: #007bff;
+    color: #ffffff;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    font-size: 14px;
+}
+
+.progress {
+    background-color: #e9ecef;
+    border-radius: 0.5rem;
+}
+
+.progress-bar {
+    border-radius: 0.5rem;
+    transition: width 0.6s ease;
+}
+
+.modal-header .btn-close {
+    margin: -0.5rem -0.5rem -0.5rem auto;
+}
+
+.list-group-item {
+    border-left: 4px solid transparent;
+}
+
+.list-group-item-success {
+    border-left-color: #198754;
+}
+
+.toast {
+    opacity: 1 !important;
+}
+
+.badge {
+    font-weight: 500;
+}
+
+.modal {
+    z-index: 1050;
+    background-color: rgba(0, 0, 0, 0.5);
+}
+
+.modal-dialog {
+    margin: 1.75rem auto;
+    max-width: 800px;
+    z-index: 1051;
+}
+
+.modal-backdrop {
+    z-index: 1049;
+}
+
+@media (max-width: 992px) {
+    .modal-dialog {
+        max-width: 95%;
+        margin: 1rem auto;
+    }
+}
+</style>
+
+<!-- JavaScript for workflow handling -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialize all tooltips
+    const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+    tooltipTriggerList.forEach(function(tooltipTriggerEl) {
+        new bootstrap.Tooltip(tooltipTriggerEl, {
+            trigger: 'hover',
+            placement: 'top'
+        });
+    });
+
+    // Initialize all modals
+    const modalList = [].slice.call(document.querySelectorAll('.modal'));
+    modalList.forEach(function(modalEl) {
+        // Create new modal instance with options
+        new bootstrap.Modal(modalEl, {
+            backdrop: 'static',
+            keyboard: true,
+            focus: true
+        });
+        
+        // Add show.bs.modal event listener
+        modalEl.addEventListener('show.bs.modal', function(event) {
+            const workflowId = this.id.replace('workflowModal', '');
+            initializeModalFields(workflowId);
+            
+            // Ensure modal is on top
+            setTimeout(() => {
+                this.style.display = 'block';
+                this.style.zIndex = '1050';
+                const backdrop = document.querySelector('.modal-backdrop');
+                if (backdrop) {
+                    backdrop.style.zIndex = '1049';
+                }
+            }, 10);
+        });
+        
+        // Add hidden.bs.modal event listener to clean up
+        modalEl.addEventListener('hidden.bs.modal', function() {
+            const workflowId = this.id.replace('workflowModal', '');
+            resetModalFields(workflowId);
+        });
+    });
+});
+
+function initializeModalFields(workflowId) {
+    const statusSelect = document.getElementById(`stepStatus${workflowId}`);
+    const noteField = document.getElementById(`noteField${workflowId}`);
+    const assigneeField = document.getElementById(`assigneeField${workflowId}`);
+    
+    if (!statusSelect || !noteField || !assigneeField) {
+        console.error('Required elements not found');
+        return;
+    }
+    
+    // Remove any existing listeners
+    const newStatusSelect = statusSelect.cloneNode(true);
+    statusSelect.parentNode.replaceChild(newStatusSelect, statusSelect);
+    
+    // Add change event listener
+    newStatusSelect.addEventListener('change', function(e) {
+        handleStatusChange(e.target.value, workflowId);
+    });
+}
+
+function resetModalFields(workflowId) {
+    const statusSelect = document.getElementById(`stepStatus${workflowId}`);
+    const noteField = document.getElementById(`noteField${workflowId}`);
+    const assigneeField = document.getElementById(`assigneeField${workflowId}`);
+    const noteTextarea = document.getElementById(`workflowNote${workflowId}`);
+    const assigneeSelect = document.getElementById(`workflowAssignee${workflowId}`);
+    
+    if (statusSelect) statusSelect.value = '';
+    if (noteField) noteField.classList.add('d-none');
+    if (assigneeField) assigneeField.classList.add('d-none');
+    if (noteTextarea) noteTextarea.value = '';
+    if (assigneeSelect) assigneeSelect.value = '';
+}
+
+function handleStatusChange(status, workflowId) {
+    const noteField = document.getElementById(`noteField${workflowId}`);
+    const assigneeField = document.getElementById(`assigneeField${workflowId}`);
+    
+    if (!noteField || !assigneeField) return;
+    
+    noteField.classList.add('d-none');
+    assigneeField.classList.add('d-none');
+    
+    if (status === 'add_note') {
+        noteField.classList.remove('d-none');
+    } else if (status === 'reassign') {
+        assigneeField.classList.remove('d-none');
+    }
+}
+
+function updateWorkflow(workflowId) {
+    const statusSelect = document.getElementById(`stepStatus${workflowId}`);
+    if (!statusSelect) {
+        showError('Status select not found');
+        return;
+    }
+    
+    const status = statusSelect.value;
+    if (!status) {
+        showError('Please select an action');
+        return;
+    }
+    
+    const data = {
+        status: status,
+        workflowId: workflowId
+    };
+    
+    if (status === 'add_note') {
+        const noteField = document.getElementById(`workflowNote${workflowId}`);
+        if (!noteField || !noteField.value.trim()) {
+            showError('Please enter a note');
+            return;
+        }
+        data.note = noteField.value.trim();
+    } else if (status === 'reassign') {
+        const assigneeField = document.getElementById(`workflowAssignee${workflowId}`);
+        if (!assigneeField || !assigneeField.value) {
+            showError('Please select an assignee');
+            return;
+        }
+        data.assignee = assigneeField.value;
+    }
+    
+    // Here you would typically send this to your backend
+    console.log('Updating workflow:', data);
+    
+    // Show success toast
+    const toastEl = document.getElementById('workflowToast');
+    if (toastEl) {
+        const toast = new bootstrap.Toast(toastEl, {
+            delay: 3000,
+            autohide: true
+        });
+        toast.show();
+    }
+    
+    // Close modal
+    const modalEl = document.getElementById(`workflowModal${workflowId}`);
+    if (modalEl) {
+        const modal = bootstrap.Modal.getInstance(modalEl);
+        if (modal) {
+            modal.hide();
+        }
+    }
+}
+
+function validateWorkflowForm() {
+    const customerId = document.getElementById('customer_id');
+    const workflowType = document.getElementById('workflow_type');
+    
+    if (!customerId || !workflowType) {
+        showError('Form elements not found');
+        return false;
+    }
+    
+    if (!customerId.value || !workflowType.value) {
+        showError('Please fill in all required fields');
+        return false;
+    }
+    
+    return true;
+}
+
+function showError(message) {
+    if (message && typeof message === 'string') {
+        alert(message);
+    }
+}
+</script>
+{% endblock %}

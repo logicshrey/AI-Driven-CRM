@@ -1,0 +1,306 @@
+<!doctype html>
+<html lang="en" data-bs-theme="light">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/animate.css@4.1.1/animate.min.css" rel="stylesheet">
+    <title>Django CRM</title>
+    <style>
+      :root {
+        --primary-color: #4361ee;
+        --primary-dark: #3730a3;
+        --success-color: #10b981;
+        --warning-color: #f59e0b;
+        --danger-color: #ef4444;
+        --info-color: #3b82f6;
+      }
+
+      [data-bs-theme="dark"] {
+        --bs-body-bg: #111827;
+        --bs-body-color: #e5e7eb;
+        --bs-border-color: #374151;
+      }
+
+      body {
+        font-family: 'Inter', sans-serif;
+        background-color: var(--bs-body-bg);
+        color: var(--bs-body-color);
+        transition: background-color 0.3s ease;
+      }
+
+      .navbar {
+        box-shadow: 0 2px 4px rgba(0,0,0,.08);
+        backdrop-filter: blur(10px);
+      }
+
+      .card {
+        border: none;
+        box-shadow: 0 0.125rem 0.25rem rgba(0,0,0,.075);
+        transition: all 0.3s ease;
+        background: rgba(255, 255, 255, 0.02);
+        backdrop-filter: blur(10px);
+      }
+
+      .card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 0.5rem 1rem rgba(0,0,0,.15);
+      }
+
+      .btn-primary {
+        background-color: var(--primary-color);
+        border-color: var(--primary-color);
+      }
+
+      .btn-primary:hover {
+        background-color: var(--primary-dark);
+        border-color: var(--primary-dark);
+      }
+
+      .alert {
+        border: none;
+        border-radius: 8px;
+      }
+
+      .table th {
+        font-weight: 600;
+        color: var(--bs-body-color);
+      }
+
+      .progress {
+        height: 0.8rem;
+        border-radius: 0.5rem;
+      }
+
+      .badge {
+        padding: 0.5em 0.8em;
+        font-weight: 500;
+      }
+
+      .card-header {
+        background-color: rgba(255, 255, 255, 0.02);
+        border-bottom: 1px solid var(--bs-border-color);
+        padding: 1rem 1.25rem;
+      }
+
+      .page-header {
+        margin-bottom: 2rem;
+        padding-bottom: 1rem;
+        border-bottom: 1px solid var(--bs-border-color);
+      }
+
+      .loading-bar {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 3px;
+        z-index: 999999;
+        background-color: var(--primary-color);
+        transform: translateX(-100%);
+        animation: shift-rightwards 1s ease-in-out infinite;
+        animation-delay: .3s;
+      }
+
+      @keyframes shift-rightwards {
+        0% { transform: translateX(-100%); }
+        40% { transform: translateX(0%); }
+        60% { transform: translateX(0%); }
+        100% { transform: translateX(100%); }
+      }
+
+      /* Toast Notifications */
+      .toast-container {
+        position: fixed;
+        bottom: 20px;
+        right: 20px;
+        z-index: 9999;
+      }
+
+      .toast {
+        background: rgba(255, 255, 255, 0.9);
+        backdrop-filter: blur(10px);
+        border: none;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        margin-bottom: 10px;
+      }
+
+      /* Floating Action Button */
+      .fab {
+        position: fixed;
+        bottom: 30px;
+        right: 30px;
+        width: 56px;
+        height: 56px;
+        border-radius: 50%;
+        background: var(--primary-color);
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        cursor: pointer;
+        transition: all 0.3s ease;
+      }
+
+      .fab:hover {
+        transform: scale(1.1);
+        box-shadow: 0 6px 8px rgba(0, 0, 0, 0.2);
+      }
+
+      /* Theme Toggle */
+      .theme-toggle {
+        cursor: pointer;
+        padding: 0.5rem;
+        border-radius: 50%;
+        transition: all 0.3s ease;
+      }
+
+      .theme-toggle:hover {
+        background: rgba(255, 255, 255, 0.1);
+      }
+
+      /* Animations */
+      .fade-in {
+        animation: fadeIn 0.5s ease-in;
+      }
+
+      .slide-in {
+        animation: slideIn 0.5s ease-out;
+      }
+
+      @keyframes fadeIn {
+        from { opacity: 0; }
+        to { opacity: 1; }
+      }
+
+      @keyframes slideIn {
+        from { transform: translateY(20px); opacity: 0; }
+        to { transform: translateY(0); opacity: 1; }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="loading-bar"></div>
+    {% include 'navbar.html' %}
+    
+    <div class="container py-4">
+      <div class="toast-container"></div>
+      
+      {% if messages %}
+        {% for message in messages %}
+          <div class="alert alert-{{ message.tags }} alert-dismissible fade show animate__animated animate__fadeInDown" role="alert">
+            <i class="fas fa-info-circle me-2"></i>
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+          </div>
+        {% endfor %}
+      {% endif %}
+      
+      {% block content %}
+      {% endblock %}
+
+      <div class="fab" onclick="showQuickActions()" data-bs-toggle="tooltip" title="Quick Actions">
+        <i class="fas fa-plus"></i>
+      </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+      // Enable tooltips
+      var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
+      var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+        return new bootstrap.Tooltip(tooltipTriggerEl)
+      })
+
+      // Theme Toggle
+      function toggleTheme() {
+        const html = document.documentElement;
+        const currentTheme = html.getAttribute('data-bs-theme');
+        const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+        html.setAttribute('data-bs-theme', newTheme);
+        localStorage.setItem('theme', newTheme);
+      }
+
+      // Load saved theme
+      const savedTheme = localStorage.getItem('theme') || 'light';
+      document.documentElement.setAttribute('data-bs-theme', savedTheme);
+
+      // Toast Notifications
+      function showToast(message, type = 'info') {
+        const toast = document.createElement('div');
+        toast.className = `toast show animate__animated animate__fadeInUp`;
+        toast.innerHTML = `
+          <div class="toast-header">
+            <i class="fas fa-info-circle me-2 text-${type}"></i>
+            <strong class="me-auto">Notification</strong>
+            <button type="button" class="btn-close" data-bs-dismiss="toast"></button>
+          </div>
+          <div class="toast-body">${message}</div>
+        `;
+        document.querySelector('.toast-container').appendChild(toast);
+        setTimeout(() => {
+          toast.classList.remove('animate__fadeInUp');
+          toast.classList.add('animate__fadeOutDown');
+          setTimeout(() => toast.remove(), 500);
+        }, 3000);
+      }
+
+      // Quick Actions Menu
+      function showQuickActions() {
+        const actions = [
+          { icon: 'user-plus', label: 'Add Customer', url: '/add_record/' },
+          { icon: 'chart-line', label: 'View Analytics', url: '/analytics_dashboard/' },
+          { icon: 'robot', label: 'AI Assistant', url: '/ai_dashboard/' }
+        ];
+
+        const menu = document.createElement('div');
+        menu.className = 'quick-actions-menu animate__animated animate__fadeIn';
+        menu.style = `
+          position: fixed;
+          bottom: 100px;
+          right: 30px;
+          background: white;
+          border-radius: 8px;
+          box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+          padding: 8px 0;
+          z-index: 999;
+        `;
+
+        actions.forEach(action => {
+          const item = document.createElement('a');
+          item.href = action.url;
+          item.className = 'd-flex align-items-center text-decoration-none text-dark p-3 hover-bg-light';
+          item.innerHTML = `
+            <i class="fas fa-${action.icon} me-3"></i>
+            <span>${action.label}</span>
+          `;
+          menu.appendChild(item);
+        });
+
+        document.body.appendChild(menu);
+
+        // Close menu when clicking outside
+        function closeMenu(e) {
+          if (!menu.contains(e.target) && !e.target.closest('.fab')) {
+            menu.classList.remove('animate__fadeIn');
+            menu.classList.add('animate__fadeOut');
+            setTimeout(() => menu.remove(), 500);
+            document.removeEventListener('click', closeMenu);
+          }
+        }
+
+        setTimeout(() => document.addEventListener('click', closeMenu), 100);
+      }
+
+      // Page Load Animation
+      document.addEventListener('DOMContentLoaded', function() {
+        document.body.classList.add('fade-in');
+      });
+    </script>
+  </body>
+</html>

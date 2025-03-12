@@ -1,0 +1,266 @@
+<nav class="navbar navbar-expand-lg navbar-dark bg-gradient sticky-top" style="background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-dark) 100%);">
+  <div class="container-fluid">
+    <a class="navbar-brand d-flex align-items-center animate__animated animate__fadeIn" href="{% url 'home' %}">
+      <div class="brand-icon me-2">
+        <i class="fas fa-robot"></i>
+      </div>
+      <span class="brand-text">AI-Driven CRM</span>
+    </a>
+    <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+        {% if user.is_authenticated %}
+        <li class="nav-item dropdown">
+          <a class="nav-link dropdown-toggle d-flex align-items-center" href="#" id="aiDropdown" role="button" data-bs-toggle="dropdown">
+            <i class="fas fa-brain me-2"></i>
+            <span>AI Features</span>
+          </a>
+          <ul class="dropdown-menu dropdown-menu-animated animate__animated animate__fadeIn">
+            <li>
+              <a class="dropdown-item d-flex align-items-center" href="{% url 'ai_dashboard' %}">
+                <i class="fas fa-tachometer-alt me-2 text-primary"></i>
+                <div>
+                  <div class="fw-medium">AI Dashboard</div>
+                  <small class="text-muted">Real-time insights</small>
+                </div>
+              </a>
+            </li>
+            <li>
+              <a class="dropdown-item d-flex align-items-center" href="{% url 'ai_engagement' %}">
+                <i class="fas fa-users me-2 text-success"></i>
+                <div>
+                  <div class="fw-medium">Smart Engagement</div>
+                  <small class="text-muted">Customer interactions</small>
+                </div>
+              </a>
+            </li>
+            <li>
+              <a class="dropdown-item d-flex align-items-center" href="{% url 'smart_workflows' %}">
+                <i class="fas fa-tasks me-2 text-info"></i>
+                <div>
+                  <div class="fw-medium">Smart Workflows</div>
+                  <small class="text-muted">Automated processes</small>
+                </div>
+              </a>
+            </li>
+            <li>
+              <a class="dropdown-item d-flex align-items-center" href="{% url 'analytics_dashboard' %}">
+                <i class="fas fa-chart-line me-2 text-warning"></i>
+                <div>
+                  <div class="fw-medium">AI Analytics</div>
+                  <small class="text-muted">Business metrics</small>
+                </div>
+              </a>
+            </li>
+          </ul>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link d-flex align-items-center" href="{% url 'add_record' %}">
+            <i class="fas fa-plus-circle me-2"></i>
+            <span>Add Record</span>
+          </a>
+        </li>
+        {% endif %}
+      </ul>
+      
+      <ul class="navbar-nav align-items-center">
+        <!-- Search -->
+        <li class="nav-item me-3">
+          <div class="search-box">
+            <input type="text" class="form-control form-control-sm bg-light bg-opacity-10 border-0 text-white" placeholder="Search...">
+          </div>
+        </li>
+
+        <!-- Theme Toggle -->
+        <li class="nav-item me-3">
+          <div class="theme-toggle" onclick="toggleTheme()" data-bs-toggle="tooltip" title="Toggle Theme">
+            <i class="fas fa-moon"></i>
+          </div>
+        </li>
+
+        <!-- Notifications -->
+        <li class="nav-item me-3">
+          <div class="position-relative" data-bs-toggle="tooltip" title="Notifications">
+            <i class="fas fa-bell"></i>
+            <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
+              3
+            </span>
+          </div>
+        </li>
+
+        {% if user.is_authenticated %}
+        <!-- User Menu -->
+        <li class="nav-item dropdown">
+          <a class="nav-link dropdown-toggle d-flex align-items-center" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown">
+            <div class="avatar-circle bg-white bg-opacity-10 me-2">
+              <span class="avatar-initials">{{ user.username|first|upper }}</span>
+            </div>
+            <span>{{ user.username }}</span>
+          </a>
+          <ul class="dropdown-menu dropdown-menu-end animate__animated animate__fadeIn">
+            <li>
+              <a class="dropdown-item d-flex align-items-center" href="#">
+                <i class="fas fa-user me-2 text-primary"></i>
+                <span>Profile</span>
+              </a>
+            </li>
+            <li>
+              <a class="dropdown-item d-flex align-items-center" href="#">
+                <i class="fas fa-cog me-2 text-secondary"></i>
+                <span>Settings</span>
+              </a>
+            </li>
+            <li><hr class="dropdown-divider"></li>
+            <li>
+              <a class="dropdown-item d-flex align-items-center text-danger" href="{% url 'logout' %}">
+                <i class="fas fa-sign-out-alt me-2"></i>
+                <span>Logout</span>
+              </a>
+            </li>
+          </ul>
+        </li>
+        {% else %}
+        <li class="nav-item">
+          <a class="nav-link d-flex align-items-center" href="{% url 'register' %}">
+            <i class="fas fa-user-plus me-2"></i>
+            <span>Register</span>
+          </a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link d-flex align-items-center" href="{% url 'home' %}">
+            <i class="fas fa-sign-in-alt me-2"></i>
+            <span>Login</span>
+          </a>
+        </li>
+        {% endif %}
+      </ul>
+    </div>
+  </div>
+</nav>
+
+<style>
+.navbar {
+  padding: 0.75rem 1rem;
+}
+
+.brand-icon {
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  font-size: 1.2rem;
+}
+
+.brand-text {
+  font-weight: 600;
+  letter-spacing: -0.5px;
+}
+
+.nav-link {
+  padding: 0.5rem 1rem;
+  position: relative;
+}
+
+.nav-link::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  width: 0;
+  height: 2px;
+  background: white;
+  transition: all 0.3s ease;
+  transform: translateX(-50%);
+}
+
+.nav-link:hover::after {
+  width: 100%;
+}
+
+.dropdown-menu {
+  border: none;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  padding: 0.5rem;
+  min-width: 240px;
+  border-radius: 8px;
+  margin-top: 0.5rem;
+}
+
+.dropdown-item {
+  padding: 0.75rem 1rem;
+  border-radius: 6px;
+  transition: all 0.2s;
+}
+
+.dropdown-item:hover {
+  background: var(--bs-light);
+  transform: translateX(5px);
+}
+
+.search-box {
+  position: relative;
+}
+
+.search-box input {
+  padding-left: 2rem;
+  width: 200px;
+  border-radius: 20px;
+}
+
+.search-box::before {
+  content: '\f002';
+  font-family: 'Font Awesome 6 Free';
+  font-weight: 900;
+  position: absolute;
+  left: 0.75rem;
+  top: 50%;
+  transform: translateY(-50%);
+  color: rgba(255, 255, 255, 0.5);
+  z-index: 1;
+}
+
+.avatar-circle {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.avatar-initials {
+  font-weight: 600;
+  font-size: 0.875rem;
+}
+
+.navbar-dark .navbar-nav .nav-link {
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.navbar-dark .navbar-nav .nav-link:hover {
+  color: #ffffff;
+}
+
+@media (max-width: 991.98px) {
+  .navbar-nav {
+    padding: 1rem 0;
+  }
+  
+  .nav-link::after {
+    display: none;
+  }
+  
+  .search-box {
+    margin: 1rem 0;
+  }
+  
+  .search-box input {
+    width: 100%;
+  }
+}
+</style>

@@ -1,0 +1,287 @@
+{% extends 'base.html' %}
+{% load custom_filters %}
+
+{% block content %}
+<div class="container mt-4">
+    <h1>AI Engagement Hub</h1>
+
+    <!-- Customer Segments -->
+    <div class="card mb-4">
+        <div class="card-header">
+            <h5 class="mb-0">Customer Segments</h5>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Customer</th>
+                            <th>Segment</th>
+                            <th>Category</th>
+                            <th>Recommendations</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for record, segment in segments.items %}
+                        <tr>
+                            <td>{{ record.first_name }} {{ record.last_name }}</td>
+                            <td>
+                                <span class="badge {% if segment == 'High Value' %}bg-success{% elif segment == 'Need Attention' %}bg-danger{% else %}bg-warning{% endif %}">
+                                    {{ segment }}
+                                </span>
+                            </td>
+                            <td><span class="badge bg-info">{{ record.customer_category }}</span></td>
+                            <td>
+                                {% for rec in record.recommendations %}
+                                <div class="mb-1">
+                                    <span class="badge bg-secondary">{{ rec.type|title }}</span>
+                                    {{ rec.action }}
+                                </div>
+                                {% endfor %}
+                            </td>
+                            <td>
+                                <button class="btn btn-sm btn-outline-primary" onclick="openMessageModal('{{ record.id }}')">
+                                    <i class="fas fa-paper-plane me-1"></i>Send Message
+                                </button>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Message Modal Template -->
+<div class="modal fade" id="dynamicMessageModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header border-0 pb-0">
+                <h5 class="modal-title">Send Personalized Message</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="messageForm">
+                    {% csrf_token %}
+                    <input type="hidden" id="currentRecordId">
+                    <div class="mb-3">
+                        <label class="form-label">Suggested Messages:</label>
+                        <div class="list-group suggested-messages">
+                            <!-- Will be populated dynamically -->
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Message:</label>
+                        <textarea class="form-control" rows="4" id="messageText"></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer border-0 pt-0">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" onclick="sendDynamicMessage()">
+                    <i class="fas fa-paper-plane me-2"></i>Send Message
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Toast Container -->
+<div class="toast-container position-fixed bottom-0 end-0 p-3">
+    <div class="toast align-items-center text-white bg-success border-0" role="alert" aria-live="assertive" aria-atomic="true">
+        <div class="d-flex">
+            <div class="toast-body">
+                <i class="fas fa-check-circle me-2"></i>
+                Message sent successfully!
+            </div>
+            <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+        </div>
+    </div>
+</div>
+
+<style>
+/* Modal Styles */
+.modal-content {
+    border: 0;
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+}
+
+.list-group-item {
+    cursor: pointer;
+    transition: all 0.2s ease;
+    border-left: 3px solid transparent;
+}
+
+.list-group-item:hover {
+    background-color: var(--bs-light);
+    border-left-color: var(--bs-primary);
+}
+
+.list-group-item.selected {
+    background-color: var(--bs-light);
+    border-left-color: var(--bs-primary);
+}
+
+/* Toast Styles */
+.toast {
+    opacity: 0.9;
+}
+
+.toast:hover {
+    opacity: 1;
+}
+
+/* Table Styles */
+.table th {
+    font-weight: 600;
+    text-transform: uppercase;
+    font-size: 0.75rem;
+    letter-spacing: 0.5px;
+}
+
+.badge {
+    font-weight: 500;
+    padding: 0.5em 0.75em;
+}
+</style>
+
+<!-- JavaScript for message handling -->
+<script>
+// Store messages data
+const messagesData = {};
+
+// Safely escape HTML content
+function escapeHtml(unsafe) {
+    return unsafe
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+}
+
+// Initialize messages data
+function initializeMessages() {
+    try {
+        const rawData = '{{ messages_data|escapejs }}';
+        const messages = JSON.parse(rawData);
+        Object.entries(messages).forEach(([id, data]) => {
+            messagesData[id] = {
+                followUp: escapeHtml(data.followUp),
+                promo: escapeHtml(data.promo)
+            };
+        });
+    } catch (error) {
+        console.error('Error initializing messages:', error);
+    }
+}
+
+// Initialize data when DOM is ready
+document.addEventListener('DOMContentLoaded', function() {
+    initializeMessages();
+    
+    // Initialize tooltips
+    var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+    tooltipTriggerList.map(function(tooltipTriggerEl) {
+        return new bootstrap.Tooltip(tooltipTriggerEl);
+    });
+
+    // Initialize toasts
+    var toastElList = [].slice.call(document.querySelectorAll('.toast'));
+    toastElList.map(function(toastEl) {
+        return new bootstrap.Toast(toastEl, {
+            autohide: true,
+            delay: 3000
+        });
+    });
+});
+
+function openMessageModal(recordId) {
+    // Set current record ID
+    document.getElementById('currentRecordId').value = recordId;
+    
+    // Get messages for this record
+    const messages = messagesData[recordId];
+    if (!messages) {
+        console.error('No messages found for record:', recordId);
+        return;
+    }
+    
+    // Clear and populate suggested messages
+    const suggestedList = document.querySelector('.suggested-messages');
+    suggestedList.innerHTML = `
+        <button type="button" class="list-group-item list-group-item-action" onclick="selectMessage(this, '${messages.followUp}')">
+            ${messages.followUp}
+        </button>
+        <button type="button" class="list-group-item list-group-item-action" onclick="selectMessage(this, '${messages.promo}')">
+            ${messages.promo}
+        </button>
+    `;
+    
+    // Clear textarea
+    document.getElementById('messageText').value = '';
+    
+    // Show modal
+    const modal = new bootstrap.Modal(document.getElementById('dynamicMessageModal'));
+    modal.show();
+}
+
+function selectMessage(element, message) {
+    // Remove selected class from all items
+    document.querySelectorAll('.list-group-item').forEach(item => {
+        item.classList.remove('selected');
+    });
+    
+    // Add selected class to clicked item
+    element.classList.add('selected');
+    
+    // Set message text
+    document.getElementById('messageText').value = message;
+}
+
+function sendDynamicMessage() {
+    const recordId = document.getElementById('currentRecordId').value;
+    const message = document.getElementById('messageText').value;
+    
+    if (!message.trim()) {
+        alert('Please enter a message');
+        return;
+    }
+    
+    // Get CSRF token
+    const csrftoken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+    
+    // Send AJAX request
+    fetch('/send_message/', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'X-CSRFToken': csrftoken,
+            'X-Requested-With': 'XMLHttpRequest'
+        },
+        body: `recordId=${recordId}&type=email&subject=AI Generated Message&content=${encodeURIComponent(message)}`
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.status === 'success') {
+            // Close modal
+            const modal = bootstrap.Modal.getInstance(document.getElementById('dynamicMessageModal'));
+            modal.hide();
+            
+            // Show success toast
+            const toastEl = document.querySelector('.toast');
+            const toast = new bootstrap.Toast(toastEl);
+            toast.show();
+        } else {
+            alert('Error sending message: ' + data.message);
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Error sending message. Please try again.');
+    });
+}
+</script>
+{% endblock %}

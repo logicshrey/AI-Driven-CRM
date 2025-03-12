@@ -1,0 +1,272 @@
+{% extends 'base.html' %}
+{% block content %}
+
+<div class="container-fluid px-4">
+    <div class="page-header d-flex justify-content-between align-items-center">
+        <div>
+            <h1 class="display-6 mb-1">AI Analytics Dashboard</h1>
+            <p class="text-muted">Real-time insights powered by artificial intelligence</p>
+        </div>
+        <div>
+            <button class="btn btn-outline-primary" data-bs-toggle="tooltip" title="Download Report">
+                <i class="fas fa-download me-2"></i>Export
+            </button>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <!-- Business Intelligence Metrics -->
+        <div class="col-xl-3 col-md-6">
+            <div class="card stat-card bg-primary bg-gradient text-white">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h6 class="stat-title text-white-50">Total Sales</h6>
+                        <h2 class="stat-value text-white">${{ metrics.total_sales }}</h2>
+                    </div>
+                    <div class="stat-icon">
+                        <i class="fas fa-dollar-sign fa-2x text-white-50"></i>
+                    </div>
+                </div>
+                <div class="stat-desc">
+                    <i class="fas fa-calendar-alt me-1"></i> Last 30 days
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6">
+            <div class="card stat-card bg-success bg-gradient text-white">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h6 class="stat-title text-white-50">Avg Ticket Value</h6>
+                        <h2 class="stat-value text-white">${{ metrics.avg_ticket_value }}</h2>
+                    </div>
+                    <div class="stat-icon">
+                        <i class="fas fa-receipt fa-2x text-white-50"></i>
+                    </div>
+                </div>
+                <div class="stat-desc">
+                    <i class="fas fa-calculator me-1"></i> Per transaction
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6">
+            <div class="card stat-card bg-info bg-gradient text-white">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h6 class="stat-title text-white-50">Customer Satisfaction</h6>
+                        <h2 class="stat-value text-white">{{ metrics.customer_satisfaction }}%</h2>
+                    </div>
+                    <div class="stat-icon">
+                        <i class="fas fa-smile fa-2x text-white-50"></i>
+                    </div>
+                </div>
+                <div class="stat-desc">
+                    <i class="fas fa-chart-line me-1"></i> Sentiment analysis
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6">
+            <div class="card stat-card bg-warning bg-gradient text-white">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h6 class="stat-title text-white-50">At-Risk Customers</h6>
+                        <h2 class="stat-value text-white">{{ metrics.churn_risk_customers }}</h2>
+                    </div>
+                    <div class="stat-icon">
+                        <i class="fas fa-user-clock fa-2x text-white-50"></i>
+                    </div>
+                </div>
+                <div class="stat-desc">
+                    <i class="fas fa-exclamation-triangle me-1"></i> High churn probability
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Churn Risk Analysis -->
+    <div class="row mt-4">
+        <div class="col-xl-12">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <div>
+                        <h5 class="mb-0">
+                            <i class="fas fa-user-shield me-2 text-primary"></i>
+                            High-Risk Customers
+                        </h5>
+                        <small class="text-muted">Customers with high probability of churn</small>
+                    </div>
+                    <div class="btn-group">
+                        <button class="btn btn-sm btn-outline-secondary">
+                            <i class="fas fa-filter me-1"></i>Filter
+                        </button>
+                        <button class="btn btn-sm btn-outline-secondary">
+                            <i class="fas fa-sort me-1"></i>Sort
+                        </button>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Customer</th>
+                                    <th>Email</th>
+                                    <th>Phone</th>
+                                    <th>Churn Risk</th>
+                                    <th class="text-end">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for customer in high_risk_customers %}
+                                <tr>
+                                    <td>
+                                        <div class="d-flex align-items-center">
+                                            <div class="avatar-initial bg-light rounded-circle me-2">
+                                                <span class="text-primary">{{ customer.customer.first_name|first }}{{ customer.customer.last_name|first }}</span>
+                                            </div>
+                                            <div>
+                                                {{ customer.customer.first_name }} {{ customer.customer.last_name }}
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <i class="fas fa-envelope text-muted me-1"></i>
+                                        {{ customer.customer.email }}
+                                    </td>
+                                    <td>
+                                        <i class="fas fa-phone text-muted me-1"></i>
+                                        {{ customer.customer.phone }}
+                                    </td>
+                                    <td style="width: 200px;">
+                                        <div class="d-flex align-items-center">
+                                            <div class="progress flex-grow-1 me-2">
+                                                <div class="progress-bar bg-danger" role="progressbar" 
+                                                    style="width: {{ customer.churn_probability }}%" 
+                                                    aria-valuenow="{{ customer.churn_probability }}" 
+                                                    aria-valuemin="0" 
+                                                    aria-valuemax="100">
+                                                </div>
+                                            </div>
+                                            <span class="text-danger fw-bold">{{ customer.churn_probability }}%</span>
+                                        </div>
+                                    </td>
+                                    <td class="text-end">
+                                        <button class="btn btn-sm btn-outline-primary me-1" data-bs-toggle="tooltip" title="Contact Customer">
+                                            <i class="fas fa-envelope"></i>
+                                        </button>
+                                        <button class="btn btn-sm btn-outline-success" data-bs-toggle="tooltip" title="Offer Discount">
+                                            <i class="fas fa-tag"></i>
+                                        </button>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- AI Insights -->
+    <div class="row mt-4">
+        <div class="col-xl-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-lightbulb me-2 text-warning"></i>
+                        AI-Powered Insights
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        {% if metrics.churn_risk_customers > 0 %}
+                        <div class="col-md-4">
+                            <div class="alert alert-danger bg-danger bg-opacity-10 border-0">
+                                <div class="d-flex">
+                                    <div class="flex-shrink-0">
+                                        <i class="fas fa-user-minus fa-2x text-danger"></i>
+                                    </div>
+                                    <div class="flex-grow-1 ms-3">
+                                        <h6 class="alert-heading">Churn Risk Alert</h6>
+                                        <p class="mb-0">Consider launching a retention campaign for high-risk customers</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        {% endif %}
+                        {% if metrics.customer_satisfaction < 80 %}
+                        <div class="col-md-4">
+                            <div class="alert alert-warning bg-warning bg-opacity-10 border-0">
+                                <div class="d-flex">
+                                    <div class="flex-shrink-0">
+                                        <i class="fas fa-exclamation-circle fa-2x text-warning"></i>
+                                    </div>
+                                    <div class="flex-grow-1 ms-3">
+                                        <h6 class="alert-heading">Satisfaction Alert</h6>
+                                        <p class="mb-0">Customer satisfaction is below target. Review recent feedback.</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        {% endif %}
+                        {% if metrics.avg_ticket_value < 100 %}
+                        <div class="col-md-4">
+                            <div class="alert alert-info bg-info bg-opacity-10 border-0">
+                                <div class="d-flex">
+                                    <div class="flex-shrink-0">
+                                        <i class="fas fa-chart-line fa-2x text-info"></i>
+                                    </div>
+                                    <div class="flex-grow-1 ms-3">
+                                        <h6 class="alert-heading">Revenue Opportunity</h6>
+                                        <p class="mb-0">Opportunity for upselling: Average ticket value could be improved</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.avatar-initial {
+    width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 500;
+}
+
+.stat-icon {
+    opacity: 0.5;
+    transition: all 0.3s ease;
+}
+
+.stat-card:hover .stat-icon {
+    opacity: 0.8;
+    transform: scale(1.1);
+}
+
+.alert {
+    transition: transform 0.2s ease;
+}
+
+.alert:hover {
+    transform: translateY(-2px);
+}
+
+.btn-group .btn {
+    border-radius: 6px;
+    margin: 0 2px;
+}
+
+.progress {
+    background-color: rgba(0, 0, 0, 0.05);
+}
+</style>
+
+{% endblock %}
